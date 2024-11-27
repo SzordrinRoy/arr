@@ -50,7 +50,7 @@ services:
       - TZ=USA/Chigaco
       - WEBUI_PORT=8080
     volumes:
-      - ${CONFIG_PATH}/qBittorrent:/config
+      - ${CONFIG_PATH}/${CONTAINER_NAME}-qBittorrent:/config
       - ${DOWNLOAD_PATH}:/downloads
     restart: unless-stopped
     
@@ -72,7 +72,7 @@ services:
       - PGID=1000
       - TZ=USA/Chigaco
     volumes:
-      - ${CONFIG_PATH}/firefox:/config
+      - ${CONFIG_PATH}/${CONTAINER_NAME}-firefox:/config
       - ${DOWNLOAD_PATH}:/config/Downloads
     shm_size: "512mb"
     restart: unless-stopped
@@ -89,7 +89,7 @@ services:
       - PGID=1000
       - TZ=USA/Chigaco
     volumes:
-      - ${CONFIG_PATH}/prowlarr:/config
+      - ${CONFIG_PATH}/${CONTAINER_NAME}-prowlarr:/config
     restart: unless-stopped
 
   radarr:
@@ -105,7 +105,7 @@ services:
       - TZ=USA/Chigaco
       - DOCKER_MODS=linuxserver/mods:radarr-striptracks
     volumes:
-      - ${CONFIG_PATH}/radarr:/config
+      - ${CONFIG_PATH}/${CONTAINER_NAME}-radarr:/config
       - ${MEDIA_PATH}/movies:/movies:rw
       - ${DOWNLOAD_PATH}:/downloads #optional
     restart: unless-stopped
@@ -123,7 +123,7 @@ services:
       - TZ=USA/Chigaco
       - DOCKER_MODS=linuxserver/mods:radarr-striptracks
     volumes:
-      - ${CONFIG_PATH}/sonarr:/config
+      - ${CONFIG_PATH}/${CONTAINER_NAME}-sonarr:/config
       - ${MEDIA_PATH}/tv:/tv:rw #optional
       - ${DOWNLOAD_PATH}:/downloads #optional
     restart: unless-stopped
@@ -151,7 +151,7 @@ services:
       - gluetun
     network_mode: service:gluetun
     volumes:
-      - ${CONFIG_PATH}/recyclarr:/config
+      - ${CONFIG_PATH}/${CONTAINER_NAME}-recyclarr:/config
     environment:
       - TZ=USA/Chigaco
     restart: unless-stopped 
