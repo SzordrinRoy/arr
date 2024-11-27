@@ -1,0 +1,164 @@
+services:
+  gluetun:
+    image: qmcgaw/gluetun:latest
+    container_name: ${CONTAINER_NAME}-gluetun
+    hostname: gluetun
+    cpu_shares: 1024
+    cap_add:
+      - NET_ADMIN
+    #network_mode: bridge
+    networks:
+      gluetun_net:
+        ipv4_address: 10.0.1.100
+    ports:
+      - 8388:8388 #Shadowsocks
+      - 8388:8388/udp #Shadowsocks
+      - 8080:8080 #qbit
+      - 59848:59848 #qbit
+      - 59848:59848/udp #qbit
+      - 3000:3000 #firefox
+      - 9696:9696 #prowlarr
+      - 7878:7878 #radarr
+      - 8989:8989 #sonarr
+      - 8191:8191 #flaresolverr
+
+    environment:
+      - SHADOWSOCKS=on #Shadowsocks
+      - SHADOWSOCKS_PASSWORD=${SHADOWSOCKS_PASS} #Shadowsocks
+      - VPN_SERVICE_PROVIDER=mullvad
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${MULLVAD_KEY}
+      - WIREGUARD_ADDRESSES=${MULLVAD_IP}
+      - CITY=${MULLVAD_CITY}
+      - TZ=USA/Chigaco
+    restart: unless-stopped
+     
+  qbittorrent:
+    image: linuxserver/qbittorrent:latest
+    container_name: ${CONTAINER_NAME}-qbittorrent
+    cpu_shares: 512
+    depends_on:
+      - gluetun
+    network_mode: service:gluetun
+    #network_mode: "service:gluetun"
+    #depends_on: 
+    #        gluetun:
+    #            condition: service_healthy
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=USA/Chigaco
+      - WEBUI_PORT=8080
+    volumes:
+      - ${DATA_PATH}/qBittorrent:/config
+      - ${DOWNLOAD_PATH}:/downloads
+    restart: unless-stopped
+    
+  firefox:
+    image: linuxserver/firefox:latest
+    container_name: ${CONTAINER_NAME}-firefox
+    cpu_shares: 1024
+    depends_on:
+      - gluetun
+    network_mode: service:gluetun
+    #network_mode: "service:gluetun"
+    #depends_on: 
+    #        gluetun:
+    #            condition: service_healthy
+    security_opt:
+      - seccomp:unconfined #optional
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=USA/Chigaco
+    volumes:
+      - ${DATA_PATH}/firefox:/config
+      - ${DOWNLOAD_PATH}:/config/Downloads
+    shm_size: "512mb"
+    restart: unless-stopped
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: ${CONTAINER_NAME}-prowlarr
+    cpu_shares: 512
+    depends_on:
+      - gluetun
+    network_mode: service:gluetun
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=USA/Chigaco
+    volumes:
+      - ${DATA_PATH}/prowlarr:/config
+    restart: unless-stopped
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: ${CONTAINER_NAME}-radarr
+    cpu_shares: 512
+    depends_on:
+      - gluetun
+    network_mode: service:gluetun
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=USA/Chigaco
+      - DOCKER_MODS=linuxserver/mods:radarr-striptracks
+    volumes:
+      - ${DATA_PATH}/radarr:/config
+      - ${MEDIA_PATH}/movies:/movies:rw
+      - ${DOWNLOAD_PATH}:/downloads #optional
+    restart: unless-stopped
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: ${CONTAINER_NAME}-sonarr
+    cpu_shares: 512
+    depends_on:
+      - gluetun
+    network_mode: service:gluetun
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=USA/Chigaco
+      - DOCKER_MODS=linuxserver/mods:radarr-striptracks
+    volumes:
+      - ${DATA_PATH}/sonarr:/config
+      - ${MEDIA_PATH}/tv:/tv:rw #optional
+      - ${DOWNLOAD_PATH}:/downloads #optional
+    restart: unless-stopped
+
+  flaresolverr:
+    # DockerHub mirror flaresolverr/flaresolverr:latest
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: ${CONTAINER_NAME}-flaresolverr
+    cpu_shares: 512
+    depends_on:
+      - gluetun
+    network_mode: service:gluetun
+    environment:
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - LOG_HTML=${LOG_HTML:-false}
+      - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
+      - TZ=USA/Chigaco
+    restart: unless-stopped 
+
+  recyclarr:
+    image: ghcr.io/recyclarr/recyclarr
+    container_name: ${CONTAINER_NAME}-recyclarr
+    cpu_shares: 512
+    depends_on:
+      - gluetun
+    network_mode: service:gluetun
+    volumes:
+      - ${DATA_PATH}/recyclarr:/config
+    environment:
+      - TZ=USA/Chigaco
+    restart: unless-stopped 
+
+networks:
+  gluetun_net:
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.0.1.0/24
