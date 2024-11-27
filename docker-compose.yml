@@ -8,7 +8,7 @@ services:
       - NET_ADMIN
     #network_mode: bridge
     networks:
-      gluetun_net:
+      ${CONTAINER_NAME}-net:
         ipv4_address: 10.0.1.100
     ports:
       - 8388:8388 #Shadowsocks
@@ -157,7 +157,7 @@ services:
     restart: unless-stopped 
 
 networks:
-  gluetun_net:
+  ${CONTAINER_NAME}-net:
     ipam:
       driver: default
       config:
