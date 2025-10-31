@@ -17,6 +17,7 @@ services:
       - 59848:59848 #qbit
       - 59848:59848/udp #qbit
       - 3000:3000 #firefox
+      - 3001:3001 #firefox
       - 9696:9696 #prowlarr
       - 7878:7878 #radarr
       - 8989:8989 #sonarr
@@ -55,7 +56,7 @@ services:
     restart: unless-stopped
     
   firefox:
-    image: linuxserver/firefox:latest
+    image: linuxserver/firefox:kasm
     container_name: ${CONTAINER_NAME}-firefox
     cpu_shares: 1024
     depends_on:
